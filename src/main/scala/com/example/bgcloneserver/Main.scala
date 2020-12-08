@@ -17,6 +17,7 @@ object Main extends IOApp {
       t <- Topic[IO, ToClient](ToClient("Connected"));
       ref <- Ref.of[IO, State](State(1));
       exitCode <- {
+        // Commands from client stream, here I should implement calculations
         val commandsStream = q
           .dequeue
           .evalMap(fromClient => {
