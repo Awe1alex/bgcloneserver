@@ -1,0 +1,16 @@
+[0m[[0m[31merror[0m] [0m[0m/mnt/c/Users/Awe1/Desktop/Scala/bgcloneserver/src/main/scala/com/example/bgcloneserver/BgcloneRoutes.scala:5:23: Unused import[0m
+[0m[[0m[31merror[0m] [0m[0mimport cats.implicits._[0m
+[0m[[0m[31merror[0m] [0m[0m                      ^[0m
+[0m[[0m[31merror[0m] [0m[0m/mnt/c/Users/Awe1/Desktop/Scala/bgcloneserver/src/main/scala/com/example/bgcloneserver/BgcloneRoutes.scala:6:32: Unused import[0m
+[0m[[0m[31merror[0m] [0m[0mimport org.http4s.{HttpRoutes, MediaType}[0m
+[0m[[0m[31merror[0m] [0m[0m                               ^[0m
+[0m[[0m[31merror[0m] [0m[0m/mnt/c/Users/Awe1/Desktop/Scala/bgcloneserver/src/main/scala/com/example/bgcloneserver/BgcloneRoutes.scala:14:78: parameter value ref in method gameRoutes is never used[0m
+[0m[[0m[31merror[0m] [0m[0m  def gameRoutes[F[_]: Sync](q: Queue[F, FromClient], t: Topic[F, ToClient], ref: Ref[F, State]): HttpRoutes[F] = {[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                             ^[0m
+[0m[[0m[31merror[0m] [0m[0m/mnt/c/Users/Awe1/Desktop/Scala/bgcloneserver/src/main/scala/com/example/bgcloneserver/BgcloneServer.scala:5:23: Unused import[0m
+[0m[[0m[31merror[0m] [0m[0mimport cats.implicits._[0m
+[0m[[0m[31merror[0m] [0m[0m                      ^[0m
+[0m[[0m[31merror[0m] [0m[0m/mnt/c/Users/Awe1/Desktop/Scala/bgcloneserver/src/main/scala/com/example/bgcloneserver/BgcloneServer.scala:19:7: parameter value client in anonymous function is never used[0m
+[0m[[0m[31merror[0m] [0m[0m      client <- BlazeClientBuilder[F](global).stream[0m
+[0m[[0m[31merror[0m] [0m[0m      ^[0m
+[0m[[0m[31merror[0m] [0m[0m5 errors found[0m
