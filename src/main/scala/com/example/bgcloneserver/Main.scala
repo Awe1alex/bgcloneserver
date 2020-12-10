@@ -2,8 +2,8 @@ package com.example.bgcloneserver
 
 import cats.effect.concurrent.Ref
 import cats.effect.{ExitCode, IO, IOApp}
-import fs2.concurrent.{Queue, Topic}
 import fs2.Stream
+import fs2.concurrent.{Queue, Topic}
 
 case class State(messageCount: Int)
 
@@ -11,11 +11,14 @@ case class FromClient(username: String, message: String)
 case class ToClient(message: String)
 
 object Main extends IOApp {
-  def run(args: List[String]) = {
+  def run(args: List[String]): IO[ExitCode] = {
+
+    TavernState.example.unsafeRunSync()
+
     for (
       q <- Queue.unbounded[IO, FromClient];
       t <- Topic[IO, ToClient](ToClient("Connected"));
-      ref <- Ref.of[IO, State](State(1));
+      ref <- Ref[IO].of(State(1));
       exitCode <- {
         // Commands from client stream, here I should implement calculations
         val commandsStream = q

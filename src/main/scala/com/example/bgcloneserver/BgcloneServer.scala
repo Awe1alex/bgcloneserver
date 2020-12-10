@@ -20,12 +20,10 @@ object BgcloneServer {
       // Can also be done via a Router if you
       // want to extract a segments not checked
       // in the underlying routes.
-      httpApp = (
-        BgcloneRoutes.gameRoutes[F](q, t)
-      ).orNotFound
+      httpApp = BgcloneRoutes.gameRoutes[F](q, t).orNotFound
 
       // With Middlewares in place
-      finalHttpApp = Logger.httpApp(true, true)(httpApp)
+      finalHttpApp = Logger.httpApp(logHeaders = true, logBody = true)(httpApp)
 
       exitCode <- BlazeServerBuilder[F](global)
         .bindHttp(8080, "0.0.0.0")
