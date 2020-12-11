@@ -6,15 +6,12 @@
 [0m[[0m[0mdebug[0m] [0m[0m	TavernState$PlayerState$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	TavernState.class[0m
 [0m[[0m[0mdebug[0m] [0m[0mWe backup class files:[0m
-[0m[[0m[0mdebug[0m] [0m[0m	TavernState$.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	TavernState$PlayerState.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	TavernState$PlayerStates.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	TavernState$PlayerState$.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	TavernState.class[0m
 [0m[[0m[0mdebug[0m] [0m[0mRegistering generated classes:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	TavernState$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	TavernState$PlayerState.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	TavernState$Coins.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	TavernState$PlayerStates.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	TavernState$PlayerState$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	TavernState.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	TavernState$Coins$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0mRemoving the temporary directory used for backing up class files: /mnt/c/Users/Awe1/Desktop/Scala/bgcloneserver/target/scala-2.13/classes.bak[0m

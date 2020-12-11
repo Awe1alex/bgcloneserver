@@ -4,6 +4,7 @@ import cats.effect.IO
 import cats.effect.concurrent.Ref
 import com.example.bgcloneserver.Tavern._
 
+
 object TavernState {
   // Tavern state ADTs, tavern state exists for each player individually
   // 1. Coins
@@ -19,8 +20,8 @@ object TavernState {
     def nextTurn: IO[PlayerState] =
       for {
         updatedState <- ref.modify(oldState => {
-          val baseCoins = if (oldState.baseCoins == 10) 10 else oldState.baseCoins + 1
-          val upgradeCost = if (oldState.upgradeCost == 0) 0 else oldState.upgradeCost - 1
+          val baseCoins = oldState.baseCoins.increase(1)
+          val upgradeCost = oldState.upgradeCost.decrease
           val rolledCards = oldState.rollCards
           val newState = oldState.copy(baseCoins = baseCoins, coins = baseCoins, upgradeCost = upgradeCost, rolledCards = rolledCards)
           (newState, newState)
@@ -28,15 +29,15 @@ object TavernState {
     } yield updatedState
 
 
-    def getCoins: IO[Int] =
+    def getCoins: IO[Coins] =
       ref.get.map(_.coins)
   }
 
   case class PlayerState(name: String,
-                         baseCoins: Int = 3,
-                         coins: Int = 3,
-                         level: Int = 1,
-                         upgradeCost: Int = 5,
+                         baseCoins: Coins = Coins(3),
+                         coins: Coins = Coins(3),
+                         level: Level = Level(1),
+                         upgradeCost: Cost = Cost(5),
                          availableCards: List[Card] = Tavern.AllCardsByLevel.head,
                          rolledCards: List[Card] = List(),
                          frozenCards: List[Card] = List(),
@@ -50,36 +51,43 @@ object TavernState {
     playerState <- playerStates.nextTurn
   } yield println(playerState)
 
+  final case class Coins private (value: Int) extends AnyVal {
 
+    def update(value: Int): Option[Coins] = {
+      if (value < 0) None
+      else if (value > 10) Option(Coins(10))
+      else Option(Coins(value))
+    }
 
+    def increase(by: Int): Coins = {
+      update(value + by) match {
+        case Some(x) => x
+        case None => Coins(value)
+      }
+    }
+  }
 
-
-
-
-
-//  final case class Coins private (value: Int) extends AnyVal
-//  object Coins {
-//    def create(value: Int): Option[Coins] = {
-//      if (value < 0) None
-//      else if (value > 10) None
-//      else Option(Coins(value))
-//    }
+  object Coins {
+    def create(value: Int): Option[Coins] = {
+      if (value < 0) None
+      else if (value > 10) None
+      else Option(Coins(value))
+    }
+  }
 //
-//    def update(value: Int): Option[Coins] = {
-//      if (value < 0) None
-//      else if (value > 10) Option(Coins(10))
-//      else Option(Coins(value))
-//    }
-//  }
-//
-//  final case class Level private (value: Int) extends AnyVal
-//  object Level {
-//    def create(value: Int): Option[Level] = {
-//      if (value < 1) None
-//      else if (value > 6) None
-//      else Option(Level(value))
-//    }
-//  }
-//
-//  final case class AvailableCards()
+  final case class Level private (value: Int) extends AnyVal
+  object Level {
+    def create(value: Int): Option[Level] = {
+      if (value < 1) None
+      else if (value > 6) None
+      else Option(Level(value))
+    }
+  }
+
+  final case class Cost private (value: Int) extends AnyVal {
+    def decrease: Cost = {
+      if (value == 0) Cost(value)
+      else Cost(value - 1)
+    }
+  }
 }
