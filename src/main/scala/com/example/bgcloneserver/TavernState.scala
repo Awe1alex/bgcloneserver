@@ -26,7 +26,7 @@ object TavernState {
                 val coins = x
                 val level = oldState.level.increase
                 val upgradeCost = level.nextUpgradeBaseCost
-                val availableCards = oldState.updatePool(level)
+                val availableCards = oldState.updatePool(oldState.availableCards, level)
                 val newState = oldState.copy(coins = coins, level = level, upgradeCost = upgradeCost, availableCards = availableCards)
                 (newState, newState)
               case Left(_) =>
@@ -63,7 +63,13 @@ object TavernState {
     }
 
     def frozeCards: IO[PlayerState] = {
-      // copy all rolled cards to frozen
+      for {
+        updatedState <- ref.modify(oldState => {
+          val frozenCards = oldState.rolledCards
+          val newState = oldState.copy(frozenCards = frozenCards)
+          (newState, newState)
+        })
+      } yield updatedState
     }
 
     def nextTurn: IO[PlayerState] =
@@ -91,9 +97,19 @@ object TavernState {
                          rolledCards: List[Card] = List(),
                          frozenCards: List[Card] = List(),
                          cardsInHand: List[Card] = List()) {
-    def roll(hardRoll: Boolean): List[Card] = ???
 
-    def updatePool(level: Level): List[Card] = ???
+    def roll(hardRoll: Boolean): List[Card] = {
+      if (hardRoll) {
+        val cardsToTake: Int = 3 + level.value / 2.floor.toInt
+        scala.util.Random.shuffle(availableCards).take(cardsToTake)
+      } else {
+        val cardsToTake: Int = 3 + level.value / 2.floor.toInt - frozenCards.length
+        frozenCards ::: scala.util.Random.shuffle(availableCards).take(cardsToTake)
+      }
+
+    }
+
+    def updatePool(cards: List[Card], lvl: Level): List[Card] = cards ::: Tavern.AllCardsByLevel(lvl.value - 1)
   }
 
   val example: IO[Unit] = for {
