@@ -17,7 +17,9 @@ lazy val root = (project in file("."))
       "io.circe"        %% "circe-generic"       % CirceVersion,
       "org.specs2"      %% "specs2-core"         % Specs2Version % "test",
       "ch.qos.logback"  %  "logback-classic"     % LogbackVersion,
-      "org.scalameta"   %% "svm-subs"            % "20.2.0"
+      "org.scalameta"   %% "svm-subs"            % "20.2.0",
+      "org.scalactic" %% "scalactic" % "3.2.2",
+      "org.scalatest" %% "scalatest" % "3.2.2" % "test"
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
     addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
