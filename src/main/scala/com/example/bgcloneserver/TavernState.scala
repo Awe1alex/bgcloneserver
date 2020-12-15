@@ -38,29 +38,62 @@ object TavernState {
         })
       } yield updatedState
 
-    def buyCard(cardId: Int): IO[PlayerState] = {
-      //Move card from rolled cards to hand
-      //Decrease coins
-      //Check if player can buy a card (has 3 coins)
-    }
+    def buyCard(cardId: Int): IO[PlayerState] =
+      for {
+        updatedState <- ref.modify(oldState => {
+          //Check if player can buy a card (has 3 coins)
+          oldState.coins.buy(Cost(3)) match {
+            case Right(x) =>
+              //Decrease coins
+              val coins = x
+              //Move card from rolled cards to hand
+              val (rolledCards, card) = oldState.rolledCards.remove(cardId)
+              val cardsInHand = oldState.cardsInHand.add(card)
+              val newState = oldState.copy(coins = coins, rolledCards = rolledCards, cardsInHand = cardsInHand)
+              (newState, newState)
+            case Left(_) =>
+              (oldState, oldState)
+          }
+        })
+      } yield updatedState
 
-    def placeOnBoard(cardId: Int, cardOrder: Int): IO[PlayerState] = {
-      //Move card from hand to board and place it on right place in board list
-      //Board can't have more than 7 cards
-    }
+    def placeOnBoard(cardId: Int, place: Int): IO[PlayerState] = for {
+      updatedState <- ref.modify(oldState => {
+        //Move card from hand to board
+        val (cardsInHand, card) = oldState.cardsInHand.remove(cardId)
+        val board = if (oldState.board.value.length < 7) oldState.board.insert(card, place) else oldState.board
+        val newState = oldState.copy(cardsInHand = cardsInHand, board = board)
+        (newState, newState)
+      })
+    } yield updatedState
 
-    def sellCard(cardId: Int): IO[PlayerState] = {
-      //Remove card from board list
-      //Add one coin to player
-    }
+    def sellCard(cardId: Int): IO[PlayerState] = for {
+      updatedState <- ref.modify(oldState => {
+        //Remove card from board list
+        val (board, _) = oldState.board.remove(cardId)
+        //Add one coin to player
+        val coins = oldState.coins.increase(1)
+        val newState = oldState.copy(board = board, coins = coins)
+        (newState, newState)
+      })
+    } yield updatedState
 
-    def moveCard(cardId: Int, cardOrder: Int): IO[PlayerState] = {
-      //Change order of list
-    }
+    def moveCard(cardId: Int, place: Int): IO[PlayerState] = for {
+      updatedState <- ref.modify(oldState => {
+        //Change order of list
+        val board = oldState.board.move(cardId, place)
+        val newState = oldState.copy(board = board)
+        (newState, newState)
+      })
+    } yield updatedState
 
-    def rollCards: IO[PlayerState] = {
-      //player state roll(hard)
-    }
+    def rollCards: IO[PlayerState] = for {
+      updatedState <- ref.modify(oldState => {
+        val rolledCards = oldState.roll(true)
+        val newState = oldState.copy(rolledCards = rolledCards)
+        (newState, newState)
+      })
+    } yield updatedState
 
     def frozeCards: IO[PlayerState] = {
       for {
@@ -94,17 +127,18 @@ object TavernState {
                          level: Level = Level(1),
                          upgradeCost: Cost = Cost(5),
                          availableCards: List[Card] = Tavern.AllCardsByLevel.head,
-                         rolledCards: List[Card] = List(),
-                         frozenCards: List[Card] = List(),
-                         cardsInHand: List[Card] = List()) {
+                         rolledCards: CardList = CardList(List()),
+                         frozenCards: CardList = CardList(List()),
+                         cardsInHand: CardList = CardList(List()),
+                         board: CardList = CardList(List())) {
 
-    def roll(hardRoll: Boolean): List[Card] = {
+    def roll(hardRoll: Boolean): CardList = {
       if (hardRoll) {
         val cardsToTake: Int = 3 + level.value / 2.floor.toInt
-        scala.util.Random.shuffle(availableCards).take(cardsToTake)
+        CardList(scala.util.Random.shuffle(availableCards).take(cardsToTake))
       } else {
-        val cardsToTake: Int = 3 + level.value / 2.floor.toInt - frozenCards.length
-        frozenCards ::: scala.util.Random.shuffle(availableCards).take(cardsToTake)
+        val cardsToTake: Int = 3 + level.value / 2.floor.toInt - frozenCards.value.length
+        CardList(frozenCards.value ::: scala.util.Random.shuffle(availableCards).take(cardsToTake))
       }
 
     }
@@ -116,7 +150,7 @@ object TavernState {
     ref <- Ref[IO].of(PlayerState(name = "Awe1"))
     playerStates = new PlayerStates(ref)
     playerState <- playerStates.nextTurn
-  } yield println(playerState)
+  } yield println(playerState.rolledCards)
 
   final case class Coins private (value: Int) extends AnyVal {
 
@@ -189,5 +223,26 @@ object TavernState {
       if (value == 0) Cost(value)
       else Cost(value - 1)
     }
+  }
+
+  final case class CardList(value: List[Card]) {
+
+    def remove(id: Int): (CardList, Card) = {
+      (CardList(value.slice(id, id)), value(id))
+    }
+
+    def add(card: Card): CardList =
+      CardList(value :+ card)
+
+    def insert(card: Card, place: Int): CardList = {
+      val (start, end) = value.splitAt(place)
+      CardList((start :+ card) ::: end)
+    }
+
+    def move(from: Int, to: Int): CardList = {
+      val (tempList, card) = CardList(value).remove(from)
+      tempList.insert(card, to)
+    }
+
   }
 }
