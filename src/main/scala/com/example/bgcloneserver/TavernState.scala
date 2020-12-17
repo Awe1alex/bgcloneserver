@@ -6,15 +6,6 @@ import com.example.bgcloneserver.Tavern._
 
 
 object TavernState {
-  // Tavern state ADTs, tavern state exists for each player individually
-  // 1. Coins
-  // 3. Level
-  // 4. Available cards
-  // 5. Rolled Cards
-  // 6. Frozen Cards
-  // 7. Cards in hand
-
-
   final class PlayerStates(ref: Ref[IO, PlayerState]) {
 
     def upgradeTavern: IO[PlayerState] =
@@ -95,7 +86,7 @@ object TavernState {
       })
     } yield updatedState
 
-    def frozeCards: IO[PlayerState] = {
+    def freezeCards: IO[PlayerState] = {
       for {
         updatedState <- ref.modify(oldState => {
           val frozenCards = oldState.rolledCards
@@ -115,10 +106,6 @@ object TavernState {
           (newState, newState)
         })
       } yield updatedState
-
-
-    def getCoins: IO[Coins] =
-      ref.get.map(_.coins)
   }
 
   case class PlayerState(name: String,
