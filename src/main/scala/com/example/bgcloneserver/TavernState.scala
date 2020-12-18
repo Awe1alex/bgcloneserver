@@ -133,12 +133,6 @@ object TavernState {
     def updatePool(cards: List[Card], lvl: Level): List[Card] = cards ::: Tavern.AllCardsByLevel(lvl.value - 1)
   }
 
-  val example: IO[Unit] = for {
-    ref <- Ref[IO].of(PlayerState(name = "Awe1"))
-    playerStates = new PlayerStates(ref)
-    playerState <- playerStates.nextTurn
-  } yield println(playerState.rolledCards)
-
   final case class Coins private (value: Int) extends AnyVal {
 
     def update(value: Int): Option[Coins] = {

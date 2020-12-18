@@ -6,7 +6,7 @@ import io.circe.syntax._
 
 object CommandADT {
 
-  final case class Command(commandName: String, arguments: Option[List[Int]])
+  final case class Command(commandName: String, arguments: Option[List[Int]], name: Option[String])
 
   implicit val commandDecoder: Decoder[Command] = deriveDecoder
   implicit val commandEncoder: Encoder[Command] = deriveEncoder
