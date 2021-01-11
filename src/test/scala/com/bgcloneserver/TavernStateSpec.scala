@@ -1,6 +1,6 @@
-package com.example.bgcloneserver
+package com.bgcloneserver
 
-import com.example.bgcloneserver.PlayerADTS._
+import PlayerADTS._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 

@@ -1,6 +1,6 @@
-package com.example.bgcloneserver
+package com.bgcloneserver
 
-import com.example.bgcloneserver.Tavern._
+import Tavern._
 
 
 object PlayerADTS {
@@ -10,7 +10,7 @@ object PlayerADTS {
   // 3. Cards on board
   // 5. Tavern State (incl cards in hand)
   // 6. Hero (in future)
-  case class PlayerState(name: String,
+  case class Player(name: String,
                          baseCoins: Coins = Coins(3),
                          coins: Coins = Coins(3),
                          level: Level = Level(1),

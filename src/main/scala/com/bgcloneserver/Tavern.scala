@@ -1,5 +1,4 @@
-package com.example.bgcloneserver
-
+package com.bgcloneserver
 
 object Tavern {
   // Tavern Adts

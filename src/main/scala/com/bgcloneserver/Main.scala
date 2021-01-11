@@ -1,11 +1,11 @@
-package com.example.bgcloneserver
+package com.bgcloneserver
 
-import com.example.bgcloneserver.CommandADT._
 import io.circe.parser._
 import cats.effect._
 import cats.syntax.all._
-import com.example.bgcloneserver.CommandADT.CommandJson.commandDecoder
-import com.example.bgcloneserver.Player.PlayerStateRef
+import com.bgcloneserver.CommandADT.Command
+import GameState.{PlayerStateRef, newPlayer, processCommand}
+import CommandADT.CommandJson.commandDecoder
 import fs2._
 import fs2.concurrent.Queue
 import org.http4s._
@@ -19,10 +19,8 @@ import org.http4s.websocket.WebSocketFrame._
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration._
 
-case class OverallState(value: Map[String, PlayerStateRef]) {
+case class Players(player1: IO[PlayerStateRef], player2: IO[PlayerStateRef])
 
-  def updateOrCreate(name: String) = ???
-}
 
 object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
@@ -36,6 +34,7 @@ object Main extends IOApp {
 
 class BattleGroundsApp[F[_]](implicit F: ConcurrentEffect[F], timer: Timer[F])
   extends Http4sDsl[F] {
+  val players: Players = Players(newPlayer("First"), newPlayer("Second"))
   def routes: HttpRoutes[F] = {
     HttpRoutes.of[F] {
       case GET -> Root / "ws" =>
@@ -43,12 +42,15 @@ class BattleGroundsApp[F[_]](implicit F: ConcurrentEffect[F], timer: Timer[F])
           Stream.awakeEvery[F](1.seconds).map(d => Text(s"Ping! $d"))
         val fromClient: Pipe[F, WebSocketFrame, Unit] = _.evalMap {
           case Text(t, _) =>
-           val result = for {
+            val command = for {
               parsedJson <- parse(t)
               parsedCommand <- parsedJson.as[Command]
             } yield (parsedCommand)
-            F.delay(println(result))
-          case f => F.delay(println(s"Unknown type: $f"))
+            command match {
+              case Right(x) => F.delay(println(processCommand(players, x).get.unsafeRunSync().rolledCards))
+              case Left(x) => F.delay(println(x))
+            }
+            case f => F.delay(println(s"Unknown type: $f"))
         }
         WebSocketBuilder[F].build(toClient, fromClient)
 

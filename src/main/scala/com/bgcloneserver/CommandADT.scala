@@ -1,4 +1,4 @@
-package com.example.bgcloneserver
+package com.bgcloneserver
 
 import io.circe.generic.semiauto._
 import io.circe.{ Decoder, Encoder }, io.circe.generic.auto._
