@@ -9,6 +9,24 @@ import PlayerADTS._
 object GameState {
   final class PlayerStates(ref: Ref[IO, Map[String, Player]]) {
 
+    def processCommand(command: Command): Option[IO[Option[Player]]] = {
+      command match {
+        case Command.Upgrade(playerName) => Some(upgradeTavern(playerName))
+
+        case Command.BuyCard(playerName, cardId) => Some(buyCard(playerName, cardId))
+
+        case Command.PlaceOnBoard(playerName, cardId, placeId) => Some(placeOnBoard(playerName,cardId, placeId))
+
+        case Command.SellCard(playerName, cardId) => Some(sellCard(playerName, cardId))
+
+        case Command.RollCards(playerName) => Some(rollCards(playerName))
+
+        case Command.FreezeCards(playerName) => Some(freezeCards(playerName))
+
+        case _ => None
+      }
+    }
+
     def addPlayer(player: Player): IO[Unit] =
       ref.update(_ + (player.name -> player))
 
@@ -51,6 +69,7 @@ object GameState {
                   //Decrease coins
                   val coins = x
                   //Move card from rolled cards to hand
+                  println(player.rolledCards.remove(cardId))
                   val (rolledCards, card) = player.rolledCards.remove(cardId)
                   val cardsInHand = player.cardsInHand.add(card)
                   val newPlayer = player.copy(coins = coins, rolledCards = rolledCards, cardsInHand = cardsInHand)
@@ -143,22 +162,20 @@ object GameState {
       } yield updatedState
     }
 
-    def nextTurn(playerName: String): IO[Option[Player]] =
+    def nextTurn: IO[Unit] =
       for {
-        updatedState <- ref.modify(
+        _ <- ref.modify(
           allPlayers => {
-            val maybePlayer = allPlayers.get(playerName).map { player =>
+            val newPlayers = allPlayers.view.mapValues(player => {
               val baseCoins = player.baseCoins.increase(1)
               val upgradeCost = player.upgradeCost.decrease
               val rolledCards = player.roll(false)
               val newPlayer = player.copy(baseCoins = baseCoins, coins = baseCoins, upgradeCost = upgradeCost, rolledCards = rolledCards)
               newPlayer
-            }
-            val newPlayers = allPlayers ++ maybePlayer.map(p => (p.name, p))
-
-            (newPlayers, maybePlayer)
-        })
-      } yield updatedState
+            }).toMap
+            (newPlayers, newPlayers)
+          })
+      } yield ()
 
     def getDamage(playerName: String, damage: Int): IO[Option[Player]] =
       for {
@@ -172,35 +189,11 @@ object GameState {
           (newPlayers, maybePlayer)
         })
       } yield updatedState
+
+    def getValue: PlayerStates = new PlayerStates(ref)
   }
-
-
-  def newGame: IO[PlayerStates] = for {
-    ref <- Ref[IO].of(Map.empty[String, Player])
-    playerStates = new PlayerStates(ref)
-  } yield playerStates
-
-
 
   def newPlayer(playerStates: PlayerStates, playerName: String): IO[Unit] =  {
    playerStates.addPlayer(Player(name = playerName))
-  }
-
-  def processCommand(playerStates: PlayerStates, command: Command): Option[IO[Option[Player]]] = {
-    command match {
-      case Command.Upgrade(playerName) => Some(playerStates.upgradeTavern(playerName))
-
-      case Command.BuyCard(playerName, cardId) => Some(playerStates.buyCard(playerName, cardId))
-
-      case Command.PlaceOnBoard(playerName, cardId, placeId) => Some(playerStates.placeOnBoard(playerName,cardId, placeId))
-
-      case Command.SellCard(playerName, cardId) => Some(playerStates.sellCard(playerName, cardId))
-
-      case Command.RollCards(playerName) => Some(playerStates.rollCards(playerName))
-
-      case Command.FreezeCards(playerName) => Some(playerStates.freezeCards(playerName))
-
-      case _ => None
-    }
   }
 }

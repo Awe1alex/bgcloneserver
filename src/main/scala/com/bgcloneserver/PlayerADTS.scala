@@ -115,6 +115,7 @@ object PlayerADTS {
 
   final case class CardList(value: List[Card]) {
     def remove(id: Int): (CardList, Card) = {
+      println(value)
       (CardList(value.slice(id, id)), value(id))
     }
 

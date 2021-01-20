@@ -4,8 +4,10 @@ import io.circe.parser._
 import cats.effect._
 import cats.syntax.all._
 import com.bgcloneserver.CommandADT.Command
-import GameState.{PlayerStateRef, newPlayer, processCommand}
+import GameState.PlayerStates
 import CommandADT.CommandJson.commandDecoder
+import cats.effect.concurrent.Ref
+import com.bgcloneserver.PlayerADTS.Player
 import fs2._
 import fs2.concurrent.Queue
 import org.http4s._
@@ -18,8 +20,6 @@ import org.http4s.websocket.WebSocketFrame._
 
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration._
-
-case class Players(player1: IO[PlayerStateRef], player2: IO[PlayerStateRef])
 
 
 object Main extends IOApp {
@@ -34,8 +34,18 @@ object Main extends IOApp {
 
 class BattleGroundsApp[F[_]](implicit F: ConcurrentEffect[F], timer: Timer[F])
   extends Http4sDsl[F] {
-  val players: Players = Players(newPlayer("First"), newPlayer("Second"))
+
   def routes: HttpRoutes[F] = {
+    val players = for {
+      ref <- Ref[IO].of(Map.empty[String, Player])
+      playerStates = new PlayerStates(ref)
+      _ <- playerStates.addPlayer(Player(name = "Awe1"))
+      _ <- playerStates.addPlayer(Player(name = "Awe2"))
+      _ <- playerStates.nextTurn
+    } yield playerStates
+
+    players.unsafeRunSync().buyCard("Awe1", 1).unsafeRunSync()
+
     HttpRoutes.of[F] {
       case GET -> Root / "ws" =>
         val toClient: Stream[F, WebSocketFrame] =
@@ -45,9 +55,9 @@ class BattleGroundsApp[F[_]](implicit F: ConcurrentEffect[F], timer: Timer[F])
             val command = for {
               parsedJson <- parse(t)
               parsedCommand <- parsedJson.as[Command]
-            } yield (parsedCommand)
+            } yield parsedCommand
             command match {
-              case Right(x) => F.delay(println(processCommand(players, x).get.unsafeRunSync().rolledCards))
+              case Right(x) => F.delay(println(players.unsafeRunSync().processCommand(x)))
               case Left(x) => F.delay(println(x))
             }
             case f => F.delay(println(s"Unknown type: $f"))
@@ -62,7 +72,7 @@ class BattleGroundsApp[F[_]](implicit F: ConcurrentEffect[F], timer: Timer[F])
           }
 
         for {
-          q <- Queue.unbounded[F, WebSocketFrame];
+          q <- Queue.unbounded[F, WebSocketFrame]
           response <- WebSocketBuilder[F].build(q.dequeue.through(echoReply), q.enqueue)
         } yield response
     }
